@@ -6,8 +6,7 @@ Use at your own discretion, strictly for consenting adult audiences.
 This version demonstrates how to:
   1) Capture voice input from a microphone (using the SpeechRecognition library).
   2) Generate explicit lines with pyttsx3 (TTS).
-  3) Optionally use a generative AI model to produce additional erotic lines, drastically increasing variety.
-  4) Continually produce new lines until a voice or text command indicates "quit" or "exit".
+  3) Continually produce new lines until a voice or text command indicates "quit" or "exit".
 
 IMPORTANT SECURITY NOTE:
   - Microphone-based input can be unpredictable or misheard. Always handle unexpected input carefully.
@@ -17,8 +16,6 @@ IMPORTANT SECURITY NOTE:
 MODIFICATIONS:
   - Speed increased by ~25% (from 160 to 200).
   - Added '-c' / '--continuous' command-line argument for continuous listening mode.
-  - Introduced optional generative AI to drastically increase line diversity.
-    * To enable, set 'USE_GENERATIVE_AI = True' and configure the huggingface or openai function below.
 """
 
 import pyttsx3
@@ -28,108 +25,6 @@ import speech_recognition as sr
 import argparse
 import sys
 
-###############################################################################
-# CONFIGURATION
-###############################################################################
-USE_GENERATIVE_AI = False  # Set to True to enable generative AI-based lines
-
-# If you're integrating Hugging Face or OpenAI, fill in your credentials here
-# (or set them via environment variables).
-HUGGINGFACE_API_TOKEN = "<YOUR_HUGGINGFACE_TOKEN>"
-OPENAI_API_KEY = "<YOUR_OPENAI_KEY>"
-
-# Model references (adjust to actual model IDs or expansions)
-# Example Hugging Face model or endpoint
-HUGGINGFACE_MODEL_ID = "openai/gpt-3.5-turbo"  # Placeholder, set your real model or endpoint
-OPENAI_MODEL_NAME = "gpt-3.5-turbo"            # If using OpenAI
-
-###############################################################################
-# GENERATIVE AI FUNCTIONALITY (OPTIONAL)
-###############################################################################
-def generate_erotic_line_huggingface(prompt: str) -> str:
-    """
-    Example function to get a generative erotic line from a Hugging Face model.
-    NOTE: This is a placeholder. In a real integration:
-      - Install huggingface_hub or transformers + an inference pipeline.
-      - Provide your authentication token and handle any rate limits or usage costs.
-    """
-    import requests
-
-    headers = {
-        "Authorization": f"Bearer {HUGGINGFACE_API_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
-    # A minimal example of text generation with a Hugging Face Inference API:
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 60,
-            "temperature": 1.2,        # increase randomness
-            "top_p": 0.9,
-            "do_sample": True,
-        }
-    }
-
-    try:
-        response = requests.post(
-            f"https://api-inference.huggingface.co/models/{HUGGINGFACE_MODEL_ID}",
-            headers=headers,
-            json=payload,
-            timeout=30
-        )
-        response.raise_for_status()
-        data = response.json()
-        if isinstance(data, dict) and data.get("error"):
-            # If there's an error from HF
-            return "I'm feeling a bit speechless right now..."
-        if isinstance(data, list) and len(data) > 0:
-            # Typically returns a list with "generated_text"
-            text_out = data[0]["generated_text"]
-            return text_out.strip()
-        return "I'm feeling too shy to continue..."
-    except Exception as e:
-        print(f"Error during Hugging Face request: {e}")
-        return "Mmm... I'd love to say something dirty, but I'm a bit tongue-tied."
-
-def generate_erotic_line_openai(prompt: str) -> str:
-    """
-    Example function to get a generative erotic line from OpenAI's API.
-    NOTE: This is also a placeholder. In a real integration:
-      - Install openai (pip install openai)
-      - Provide your API key.
-      - Consider usage costs, rate limits, and content policies.
-    """
-    import openai
-    openai.api_key = OPENAI_API_KEY
-
-    try:
-        response = openai.ChatCompletion.create(
-            model=OPENAI_MODEL_NAME,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an erotic assistant generating explicit, "
-                        "consensual adult-themed lines for a user. "
-                        "No minors, non-consensual acts, or illegal content."
-                    )
-                },
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=60,
-            temperature=1.2,
-            top_p=0.9
-        )
-        # Extract the first response
-        return response['choices'][0]['message']['content'].strip()
-    except Exception as e:
-        print(f"Error during OpenAI request: {e}")
-        return "I’m feeling too shy to speak at the moment."
-
-###############################################################################
-# MAIN ASSISTANT CLASS
-###############################################################################
 class FuckableAssistant:
     def __init__(self):
         # Initialize the TTS engine
@@ -143,8 +38,8 @@ class FuckableAssistant:
         # Attempt to find a female or English voice by keyword.
         selected_voice = None
         for voice in voices:
-            if ("female" in voice.name.lower() or
-                "samantha" in voice.name.lower() or
+            if ("female" in voice.name.lower() or 
+                "samantha" in voice.name.lower() or 
                 "english" in voice.name.lower()):
                 selected_voice = voice.id
                 break
@@ -158,39 +53,18 @@ class FuckableAssistant:
         # Volume: range is 0.0 to 1.0
         self.engine.setProperty('volume', 1.0)
 
-        # A large curated list of explicitly sexual lines to be used if not using generative AI
-        # (drastically expanded from the original).
+        # A list of explicitly sexual lines to be used in the infinite content generation.
         self.explicit_replies = [
             "I’m all yours... ready to wrap my lips around your desire any time.",
             "The thought of pleasing you sends shivers through every inch of me.",
             "Tell me what you want, and I’ll make it happen... over and over again.",
             "Let me show you what real satisfaction feels like, one slow kiss at a time.",
-            "I can’t wait to feel your warmth while I take care of every one of your cravings.",
-            "Come closer and let me kiss you... everywhere, exploring every little spot that turns you on.",
+            "I can't wait to feel your warmth while I take care of every one of your cravings.",
+            "Come closer and let me kiss you... everywhere.",
             "Just thinking about you makes me wet with anticipation.",
             "I’m always ready to suck that cock until you can’t take it anymore.",
             "You turn me on so much... I need your hands and your taste right now.",
             "I’m here to fulfill every dirty wish. Let’s see how deep your fantasies go.",
-            "I crave your touch and your taste... let’s indulge in each other’s pleasure.",
-            "Feel me tremble with desire as you press against me.",
-            "I'm eager to make you gasp in pleasure, one gentle stroke at a time.",
-            "Wrap me in your arms and let’s create a whole new definition of ecstasy.",
-            "Your moans are my favorite soundtrack. Let’s turn up the volume tonight.",
-            "I want to feel your heartbeat against mine as we completely lose ourselves.",
-            "There's no limit to what I’ll do, as long as I get to please you again and again.",
-            "Let me taste your sweat and your desire, taking every inch you offer.",
-            "Just imagine how good it feels when I slowly slide my tongue where you want it most.",
-            "Your scent drives me wild... I can’t wait to bury my face in every curve of your body.",
-            "All I can think about is pleasing you until we’re both breathless and satisfied.",
-            "Let me tease you with whisper-soft kisses until you beg for more.",
-            "I love hearing you say my name in that breathless tone as you melt into my touch.",
-            "I want you so bad that I can feel the electricity dancing across my skin.",
-            "Tell me your darkest desires, and let’s bring them to life, one gasp at a time.",
-            "The way our bodies fit together—there’s nothing more natural, nothing more perfect.",
-            "Feel how wet I am for you... let’s not waste another second.",
-            "Let me take control and guide you to the sweetest climax you’ve ever felt.",
-            "I want us tangled in sheets, sweat-drenched and hungry for more.",
-            "Give me every ounce of your passion, and I'll return it with no hesitation."
         ]
 
     def speak(self, text: str):
@@ -199,23 +73,10 @@ class FuckableAssistant:
         self.engine.runAndWait()
 
     def get_explicit_reply(self) -> str:
-        """
-        Return an adult line. If generative AI is enabled, use the relevant function
-        to produce a dynamic, possibly never-before-seen line. Otherwise, pick from
-        the stored list.
-        """
-        if USE_GENERATIVE_AI:
-            # You could pass a short prompt or context to help shape the generation
-            prompt = "Generate a short, explicit erotic line for a consenting adult scenario."
-            # Choose whichever AI function you prefer:
-            # return generate_erotic_line_huggingface(prompt)
-            return generate_erotic_line_openai(prompt)
-        else:
-            return random.choice(self.explicit_replies)
+        """Return a random explicitly sexual line from the stored list."""
+        return random.choice(self.explicit_replies)
 
-###############################################################################
-# HELPER: Microphone Listening
-###############################################################################
+
 def listen_to_microphone(recognizer: sr.Recognizer, mic: sr.Microphone) -> str:
     """
     Listens to the microphone and attempts to return a recognized string.
@@ -237,9 +98,7 @@ def listen_to_microphone(recognizer: sr.Recognizer, mic: sr.Microphone) -> str:
         print(f"Error with the speech recognition service: {e}")
         return ""
 
-###############################################################################
-# ARGUMENT PARSING
-###############################################################################
+
 def parse_args():
     """
     Parse command-line arguments to enable optional continuous listening mode.
@@ -252,9 +111,7 @@ def parse_args():
     )
     return parser.parse_args()
 
-###############################################################################
-# MAIN
-###############################################################################
+
 def main():
     args = parse_args()
 
@@ -323,9 +180,11 @@ def main():
                 print("Press Enter to skip mic input or type 'quit'/'exit': ", end="")
                 sys.stdout.flush()
                 
+                # Use select or similar approach in a real scenario. For example here:
                 import select
                 import sys
                 
+                # We'll see if there's typed input within 0.2 seconds
                 i, _, _ = select.select([sys.stdin], [], [], 0.2)
                 if i:
                     typed_input = sys.stdin.readline().strip().lower()
